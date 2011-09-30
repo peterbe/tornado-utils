@@ -4,9 +4,11 @@ import smtplib
 import socket
 import threading
 
-from utils.send_mail.backends.base import BaseEmailBackend
-from utils.send_mail.dns_name import DNS_NAME
-from utils.send_mail import config
+from .base import BaseEmailBackend
+from .. import config
+from .. import dns_name
+DNS_NAME = dns_name.DNS_NAME
+
 
 class EmailBackend(BaseEmailBackend):
     """

@@ -5,8 +5,9 @@ import datetime
 import os.path
 import cPickle
 import logging
-from utils.send_mail.backends.base import BaseEmailBackend
-from utils.send_mail import config
+from .base import BaseEmailBackend
+from .. import config
+
 
 class EmailBackend(BaseEmailBackend):
 

@@ -1,7 +1,7 @@
 import sys
 import threading
 
-from utils.send_mail.backends.base import BaseEmailBackend
+from .base import BaseEmailBackend
 
 class EmailBackend(BaseEmailBackend):
     def __init__(self, *args, **kwargs):

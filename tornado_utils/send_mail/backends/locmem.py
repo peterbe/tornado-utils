@@ -2,10 +2,8 @@
 Backend for test environment.
 """
 import sys
-#print sys.path
-import utils.send_mail as mail
-#from utils.send_mail import send_email as mail
-from utils.send_mail.backends.base import BaseEmailBackend
+from tornado_utils import send_mail as mail  # ugliest hack known to man
+from .base import BaseEmailBackend
 
 class EmailBackend(BaseEmailBackend):
     """A email backend for use during test sessions.
