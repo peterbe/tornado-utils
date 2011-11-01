@@ -1,8 +1,12 @@
 import os
 import re
-import bcrypt
 import datetime
 import random
+try:
+    import bcrypt
+except ImportError:
+    # it'd be a shame to rely on this existing
+    bcrypt = None
 
 
 class djangolike_request_dict(dict):
@@ -34,6 +38,8 @@ def datetime_to_date(dt):
     return datetime.date(dt.year, dt.month, dt.day)
 
 def encrypt_password(raw_password, log_rounds=10):
+    if not bcrypt:
+        raise SystemError("bcrypt could no be imported")
     salt = bcrypt.gensalt(log_rounds=log_rounds)
     hsh = bcrypt.hashpw(raw_password, salt)
     algo = 'bcrypt'
