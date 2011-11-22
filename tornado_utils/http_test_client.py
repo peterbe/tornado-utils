@@ -3,7 +3,7 @@ import Cookie
 from tornado.httpclient import HTTPRequest
 from tornado import escape
 
-__version__ = '1.2'
+__version__ = '1.3'
 
 class LoginError(Exception):
     pass
@@ -24,6 +24,9 @@ class HTTPClientMixin(object):
     def post(self, url, data, headers=None, follow_redirects=False):
         if data is not None:
             if isinstance(data, dict):
+                for key, value in data.items():
+                    if isinstance(value, unicode):
+                        data[key] = value.encode('utf-8')
                 data = urlencode(data, True)
         return self._fetch(url, 'POST', data, headers,
                            follow_redirects=follow_redirects)
