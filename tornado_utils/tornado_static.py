@@ -8,13 +8,14 @@ suitable for aggressive HTTP caching.
 (c) mail@peterbe.com
 """
 
-__version__ = '1.4'
+__version__ = '1.5'
 
 import os
 import cPickle
 import re
 import stat
 import marshal
+import warnings
 from time import time
 from tempfile import gettempdir
 from base64 import encodestring
@@ -71,7 +72,7 @@ def _delete_old_static_name_conversion():
 
 def load_name_conversion():
     try:
-        return marshal.load(file(out_file))
+        return marshal.load(open(out_file))
     except IOError:
         return dict()
 
@@ -79,7 +80,7 @@ _delete_old_static_name_conversion()
 _name_conversion = load_name_conversion()
 
 def save_name_conversion():
-    marshal.dump(_name_conversion, file(out_file, 'w'))
+    marshal.dump(_name_conversion, open(out_file, 'w'))
 
 class StaticURL(tornado.web.UIModule):
 
@@ -142,22 +143,30 @@ class StaticURL(tornado.web.UIModule):
                             code = run_uglify_js_compiler(code, uglifyjs_location,
                               verbose=self.handler.settings.get('debug', False))
                         elif closure_location:
-                        #if closure_location:
                             orig_code = code
                             code = run_closure_compiler(code, closure_location,
                               verbose=self.handler.settings.get('debug', False))
                         elif yui_location:
                             code = run_yui_compressor(code, 'js', yui_location,
-                          verbose=self.handler.settings.get('debug', False))
+                              verbose=self.handler.settings.get('debug', False))
+                        else:
+                            warnings.warn('No external program configured '
+                                          'for optimizing .js')
+
                 elif full_path.endswith('.css'):
                     if len(full_paths) > 1:
-                        destination.write('/* %s */\n' % os.path.basename(full_path))
-                    if do_optimize_static_content and not self._already_optimized_filename(full_path):
+                        (destination.write('/* %s */\n' %
+                          os.path.basename(full_path)))
+                    if (do_optimize_static_content and
+                        not self._already_optimized_filename(full_path)):
                         if cssmin is not None:
                             code = cssmin.cssmin(code)
                         elif yui_location:
                             code = run_yui_compressor(code, 'css', yui_location,
-                              verbose=self.handler.settings.get('debug', False))
+                             verbose=self.handler.settings.get('debug', False))
+                        else:
+                            warnings.warn('No external program configured for '
+                                          'optimizing .css')
                     # do run this after the run_yui_compressor() has been used so that
                     # code that is commented out doesn't affect
                     code = self._replace_css_images_with_static_urls(
