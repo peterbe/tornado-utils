@@ -6,7 +6,14 @@ import os.path
 import cPickle
 import logging
 from .base import BaseEmailBackend
-from .. import config
+try:
+    import send_mail_config as config
+except ImportError:
+    try:
+        from .. import config
+    except ImportError:
+        print "Create a file called 'send_mail_config.py' and copy from 'config.py-dist'"
+        raise
 
 
 class EmailBackend(BaseEmailBackend):
