@@ -8,7 +8,7 @@ suitable for aggressive HTTP caching.
 (c) mail@peterbe.com
 """
 
-__version__ = '1.5'
+__version__ = '1.6'
 
 import os
 import cPickle
@@ -115,6 +115,7 @@ class StaticURL(tornado.web.UIModule):
 
         n, ext = os.path.splitext(new_name)
         new_name = "%s.%s%s" % (n, youngest, ext)
+        optimization_done = False
         if os.path.isfile(new_name):
             # conversion and preparation has already been done!
             # No point doing it again, so just exit here
@@ -139,6 +140,7 @@ class StaticURL(tornado.web.UIModule):
                     if len(full_paths) > 1:
                         destination.write('/* %s */\n' % os.path.basename(full_path))
                     if do_optimize_static_content and not self._already_optimized_filename(full_path):
+                        optimization_done = True
                         if uglifyjs_location:
                             code = run_uglify_js_compiler(code, uglifyjs_location,
                               verbose=self.handler.settings.get('debug', False))
@@ -150,6 +152,7 @@ class StaticURL(tornado.web.UIModule):
                             code = run_yui_compressor(code, 'js', yui_location,
                               verbose=self.handler.settings.get('debug', False))
                         else:
+                            optimization_done = False
                             warnings.warn('No external program configured '
                                           'for optimizing .js')
 
@@ -159,12 +162,14 @@ class StaticURL(tornado.web.UIModule):
                           os.path.basename(full_path)))
                     if (do_optimize_static_content and
                         not self._already_optimized_filename(full_path)):
+                        optimization_done = True
                         if cssmin is not None:
                             code = cssmin.cssmin(code)
                         elif yui_location:
                             code = run_yui_compressor(code, 'css', yui_location,
                              verbose=self.handler.settings.get('debug', False))
                         else:
+                            optimization_done = False
                             warnings.warn('No external program configured for '
                                           'optimizing .css')
                     # do run this after the run_yui_compressor() has been used so that
@@ -176,7 +181,6 @@ class StaticURL(tornado.web.UIModule):
                 else:
                     # this just copies the file
                     pass
-                    #raise ValueError("Unknown extension %s" % full_path)
                 destination.write(code)
                 destination.write("\n")
 
@@ -188,9 +192,11 @@ class StaticURL(tornado.web.UIModule):
 
         ## Commented out, because I don't want to use CDN when it might take 5 seconds
         # to generate the new file.
-        #cdn_prefix = self.handler.get_cdn_prefix()
-        #if cdn_prefix:
-        #    new_name = cdn_prefix + new_name
+        # only bother with the cdn_prefix addition if the file wasn't optimized
+        if not optimization_done:
+            cdn_prefix = self.handler.get_cdn_prefix()
+            if cdn_prefix:
+                new_name = cdn_prefix + new_name
         return new_name
 
 
