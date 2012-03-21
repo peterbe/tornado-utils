@@ -8,7 +8,7 @@ suitable for aggressive HTTP caching.
 (c) mail@peterbe.com
 """
 
-__version__ = '1.6'
+__version__ = '1.7'
 
 import os
 import cPickle
@@ -84,7 +84,7 @@ def save_name_conversion():
 
 class StaticURL(tornado.web.UIModule):
 
-    def render(self, *static_urls):
+    def render(self, *static_urls, **options):
         # the following 4 lines will have to be run for every request. Since
         # it's just a basic lookup on a dict it's going to be uber fast.
         basic_name = ''.join(static_urls)
@@ -122,8 +122,11 @@ class StaticURL(tornado.web.UIModule):
             pass
         else:
             destination = file(new_name, 'w')
-            do_optimize_static_content = self.handler.settings\
-              .get('optimize_static_content', True)
+            if options.get('dont_optimize'):
+                do_optimize_static_content = False
+            else:
+                do_optimize_static_content = self.handler.settings\
+                  .get('optimize_static_content', True)
 
             if do_optimize_static_content:
                 uglifyjs_location = self.handler\
@@ -139,7 +142,8 @@ class StaticURL(tornado.web.UIModule):
                 if full_path.endswith('.js'):
                     if len(full_paths) > 1:
                         destination.write('/* %s */\n' % os.path.basename(full_path))
-                    if do_optimize_static_content and not self._already_optimized_filename(full_path):
+                    if (do_optimize_static_content and
+                        not self._already_optimized_filename(full_path)):
                         optimization_done = True
                         if uglifyjs_location:
                             code = run_uglify_js_compiler(code, uglifyjs_location,
