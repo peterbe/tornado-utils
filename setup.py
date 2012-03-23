@@ -7,7 +7,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(name='tornado-utils',
-      version='1.2',
+      version='1.3',
       description='Utility scripts for a Tornado site',
       long_description=read('README.md'),
       author='Peter Bengtsson',
