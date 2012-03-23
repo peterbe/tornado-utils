@@ -1,3 +1,5 @@
 tornado_utils/send_mail/config.py
 *.pyc
 *~
+MANIFEST
+dist/
