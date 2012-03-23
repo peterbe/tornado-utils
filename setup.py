@@ -23,7 +23,5 @@ setup(name='tornado-utils',
            'Programming Language :: Python :: 2',
            'Intended Audience :: Developers',
            'Operating System :: POSIX :: Linux',
-           'Topic :: Software Development :: Testing'
-           'Topic :: Software Development :: Build Tools'
       ],
 )
