@@ -76,7 +76,7 @@ def mkdir(newdir):
     else:
         head, tail = os.path.split(newdir)
         if head and not os.path.isdir(head):
-            _mkdir(head)
+            mkdir(head)
         if tail:
             os.mkdir(newdir)
 
