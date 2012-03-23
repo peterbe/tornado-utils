@@ -43,7 +43,7 @@ def encrypt_password(raw_password, log_rounds=10):
     salt = bcrypt.gensalt(log_rounds=log_rounds)
     hsh = bcrypt.hashpw(raw_password, salt)
     algo = 'bcrypt'
-    return u'%s$bcrypt$%s' % (algo, hsh)
+    return u'%s$%s$%s' % (salt, algo, hsh)
 
 
 def niceboolean(value):
