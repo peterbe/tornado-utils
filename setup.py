@@ -16,7 +16,7 @@ setup(name='tornado-utils',
       packages = [
         'tornado_utils',
         'tornado_utils.send_mail',
-        'tornado_utils.send_mail.backend',
+        'tornado_utils.send_mail.backends',
         'tornado_utils.tests',
       ],
       classifiers=[
