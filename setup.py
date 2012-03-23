@@ -13,6 +13,12 @@ setup(name='tornado-utils',
       author='Peter Bengtsson',
       author_email='mail@peterbe.com',
       url='http://github.com/peterbe/tornado-utils',
+      packages = [
+        'tornado_utils',
+        'tornado_utils.send_mail',
+        'tornado_utils.send_mail.backends',
+        'tornado_utils.tests',
+      ],
       classifiers=[
            'Programming Language :: Python :: 2',
            'Intended Audience :: Developers',
