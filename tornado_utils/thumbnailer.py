@@ -15,7 +15,7 @@ def get_thumbnail(save_path, image_data, (max_width, max_height), quality=85):
         #print "FOUND", save_path
         return image.size
     directory = os.path.dirname(save_path)
-    _mkdir(directory)
+    mkdir(directory)
     basename = os.path.basename(save_path)
     original_save_path = os.path.join(directory, 'original.' + basename)
     with open(original_save_path, 'wb') as f:
