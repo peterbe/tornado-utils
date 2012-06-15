@@ -74,11 +74,12 @@ class TestClient(HTTPClientMixin):
         try:
             sc = headers['Set-Cookie']
             cookies = escape.native_str(sc)
+            self.cookies.update(Cookie.SimpleCookie(cookies))
             while True:
                 self.cookies.update(Cookie.SimpleCookie(cookies))
-                if cookies.find(',') == -1:
+                if ',' not in cookies:
                     break
-                cookies = cookies[cookies.find(',') + len(','):]
+                cookies = cookies[cookies.find(',') + 1:]
         except KeyError:
             return
 
