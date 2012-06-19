@@ -26,7 +26,7 @@ try:
     import cssmin
 except ImportError:
     cssmin = None
-    
+
 from .utils import mkdir
 
 ################################################################################
@@ -251,7 +251,7 @@ class StaticURL(tornado.web.UIModule):
 
     def _already_optimized_filename(self, file_path):
         file_name = os.path.basename(file_path)
-        for part in ('.min.', '.minified.', '.pack.', '-jsmin.'):
+        for part in ('-min-', '-min.', '.min.', '.minified.', '.pack.', '-jsmin.'):
             if part in file_name:
                 return True
         return False
