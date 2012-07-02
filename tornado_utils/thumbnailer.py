@@ -6,13 +6,13 @@ import os
 
 from .utils import mkdir
 
-def get_thumbnail(save_path, image_data, (max_width, max_height), quality=85):
+def get_thumbnail(save_path, image_data, (max_width, max_height),
+                  quality=85, **kwargs):
     if not Image:
         raise SystemError("PIL.Image was not imported")
 
     if os.path.isfile(save_path):
         image = Image.open(save_path)
-        #print "FOUND", save_path
         return image.size
     directory = os.path.dirname(save_path)
     mkdir(directory)
@@ -20,17 +20,18 @@ def get_thumbnail(save_path, image_data, (max_width, max_height), quality=85):
     original_save_path = os.path.join(directory, 'original.' + basename)
     with open(original_save_path, 'wb') as f:
         f.write(image_data)
-    #print "WROTE", original_save_path
     original_image = Image.open(original_save_path)
-    image = scale_and_crop(original_image, (max_width, max_height))
+    image = scale_and_crop(
+        original_image,
+        (max_width, max_height),
+        **kwargs
+    )
     format = None
     try:
         image.save(save_path,
                    format=format,
                    quality=quality,
                    optimize=1)
-        #print "SAVED", save_path
-
     except IOError:
         # Try again, without optimization (PIL can't optimize an image
         # larger than ImageFile.MAXBLOCK, which is 64k by default)
