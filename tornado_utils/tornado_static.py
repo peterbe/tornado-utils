@@ -8,7 +8,7 @@ suitable for aggressive HTTP caching.
 (c) mail@peterbe.com
 """
 
-__version__ = '1.7'
+__version__ = '1.8'
 
 import os
 import cPickle
@@ -264,10 +264,10 @@ class Static(StaticURL):
         if extension == 'css':
             template = '<link rel="stylesheet" type="text/css" href="%(url)s">'
         elif extension == 'js':
-            template = '<script '
-            if 'defer' in options:
+            template = '<script type="text/javascript" '
+            if options.get('defer'):
                 template += 'defer '
-            elif 'async' in options:
+            elif options.get('async'):
                 template += 'async '
             template += 'src="%(url)s"></script>'
         else:
@@ -373,10 +373,10 @@ class PlainStatic(tornado.web.UIModule):
         if extension == 'css':
             template = '<link rel="stylesheet" type="text/css" href="%(url)s">'
         elif extension == 'js':
-            template = '<script '
-            if 'defer' in options:
+            template = '<script type="text/javascript" '
+            if options.get('defer'):
                 template += 'defer '
-            elif 'async' in options:
+            elif options.get('async'):
                 template += 'async '
             template += 'src="%(url)s"></script>'
         else:
