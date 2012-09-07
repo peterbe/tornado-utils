@@ -370,7 +370,8 @@ def get_connection(backend, fail_silently=False, **kwds):
     return klass(fail_silently=fail_silently, **kwds)
 
 def send_email(backend, subject, message, from_email, recipient_list,
-               fail_silently=False, auth_user=None, auth_password=None,
+               fail_silently=False, bcc=None,
+               auth_user=None, auth_password=None,
                connection=None, headers=None):
     """
     Easy wrapper for sending a single message to a recipient list. All members
@@ -382,13 +383,19 @@ def send_email(backend, subject, message, from_email, recipient_list,
     Note: The API for this method is frozen. New code wanting to extend the
     functionality should use the EmailMessage class directly.
     """
+    if not isinstance(recipient_list, list):
+        recipient_list = [recipient_list]
+    if bcc is not None and not isinstance(bcc, list):
+        bcc = [bcc]
+
     connection = connection or get_connection(backend,
                                     username=auth_user,
                                     password=auth_password,
                                     fail_silently=fail_silently)
     return EmailMessage(subject, message, from_email, recipient_list,
                         connection=connection,
-                        headers=headers).send()
+                        headers=headers,
+                        bcc=bcc).send()
 
 def send_multipart_email(backend,
                          text_part, html_part, subject, recipients,
