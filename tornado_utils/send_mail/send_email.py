@@ -116,7 +116,7 @@ class EmailMessage(object):
     encoding = None     # None => use settings default
 
     def __init__(self, subject, body, from_email, to=None, bcc=None,
-                 connection=None, attachments=None, headers=None):
+                 connection=None, attachments=None, headers=None, cc=None):
         """
         Initialize a single email message (which can be sent to multiple
         recipients).
@@ -130,6 +130,11 @@ class EmailMessage(object):
             self.to = list(to)
         else:
             self.to = []
+        if cc:
+            assert not isinstance(cc, basestring), '"cc" argument must be a list or tuple'
+            self.cc = list(cc)
+        else:
+            self.cc = []
         if bcc:
             assert not isinstance(bcc, basestring), '"bcc" argument must be a list or tuple'
             self.bcc = list(bcc)
@@ -158,6 +163,8 @@ class EmailMessage(object):
         msg['Subject'] = self.subject
         msg['From'] = self.extra_headers.get('From', self.from_email)
         msg['To'] = ', '.join(self.to)
+        if self.cc:
+            msg['Cc'] = ', '.join(self.cc)
 
         # Email header names are case-insensitive (RFC 2045), so we have to
         # accommodate that when doing comparisons.
@@ -177,7 +184,7 @@ class EmailMessage(object):
         Returns a list of all recipients of the email (includes direct
         addressees as well as Bcc entries).
         """
-        return self.to + self.bcc
+        return self.to + self.cc + self.bcc
 
     def send(self, fail_silently=False):
         """Sends the email message."""
@@ -372,7 +379,8 @@ def get_connection(backend, fail_silently=False, **kwds):
 def send_email(backend, subject, message, from_email, recipient_list,
                fail_silently=False, bcc=None,
                auth_user=None, auth_password=None,
-               connection=None, headers=None):
+               connection=None, headers=None,
+               cc=None):
     """
     Easy wrapper for sending a single message to a recipient list. All members
     of the recipient list will see the other recipients in the 'To' field.
@@ -387,7 +395,8 @@ def send_email(backend, subject, message, from_email, recipient_list,
         recipient_list = [recipient_list]
     if bcc is not None and not isinstance(bcc, list):
         bcc = [bcc]
-
+    if cc is not None and not isinstance(cc, list):
+        cc = [cc]
     connection = connection or get_connection(backend,
                                     username=auth_user,
                                     password=auth_password,
@@ -395,7 +404,8 @@ def send_email(backend, subject, message, from_email, recipient_list,
     return EmailMessage(subject, message, from_email, recipient_list,
                         connection=connection,
                         headers=headers,
-                        bcc=bcc).send()
+                        bcc=bcc,
+                        cc=cc).send()
 
 def send_multipart_email(backend,
                          text_part, html_part, subject, recipients,
