@@ -391,11 +391,11 @@ def send_email(backend, subject, message, from_email, recipient_list,
     Note: The API for this method is frozen. New code wanting to extend the
     functionality should use the EmailMessage class directly.
     """
-    if not isinstance(recipient_list, list):
+    if not isinstance(recipient_list, (list, tuple)):
         recipient_list = [recipient_list]
-    if bcc is not None and not isinstance(bcc, list):
+    if bcc is not None and not isinstance(bcc, (list, tuple)):
         bcc = [bcc]
-    if cc is not None and not isinstance(cc, list):
+    if cc is not None and not isinstance(cc, (list, tuple)):
         cc = [cc]
     connection = connection or get_connection(backend,
                                     username=auth_user,
