@@ -8,7 +8,7 @@ suitable for aggressive HTTP caching.
 (c) mail@peterbe.com
 """
 
-__version__ = '1.8'
+__version__ = '1.9'
 
 import os
 import cPickle
@@ -234,10 +234,10 @@ class StaticURL(tornado.web.UIModule):
               (filename.startswith("'") and filename.endswith("'")):
                 filename = filename[1:-1]
             if 'data:image' in filename or filename.startswith('http://'):
-                return filename
+                return 'url("%s")' % filename
             if filename == '.':
                 # this is a known IE hack in CSS
-                return filename
+                return 'url(".")'
             # It's really quite common that the CSS file refers to the file
             # that doesn't exist because if you refer to an image in CSS for
             # a selector you never use you simply don't suffer.
