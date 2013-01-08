@@ -1,3 +1,6 @@
+## The route helpers were originally written by
+## Jeremy Kelley (http://github.com/nod).
+
 import tornado.web
 class route(object):
     """
