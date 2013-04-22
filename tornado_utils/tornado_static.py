@@ -16,6 +16,7 @@ import re
 import stat
 import marshal
 import warnings
+from cStringIO import StringIO
 from time import time
 from tempfile import gettempdir
 from base64 import encodestring
@@ -69,15 +70,17 @@ def save_name_conversion():
 class StaticURL(tornado.web.UIModule):
 
     def render(self, *static_urls, **options):
-        # the following 4 lines will have to be run for every request. Since
-        # it's just a basic lookup on a dict it's going to be uber fast.
-        basic_name = ''.join(static_urls)
-        already = _name_conversion.get(basic_name)
-        if already:
-            cdn_prefix = self.handler.get_cdn_prefix()
-            if cdn_prefix:
-                already = cdn_prefix + already
-            return already
+        return_inline = options.get('return_inline', False)
+        if not return_inline:
+            # the following 4 lines will have to be run for every request. Since
+            # it's just a basic lookup on a dict it's going to be uber fast.
+            basic_name = ''.join(static_urls)
+            already = _name_conversion.get(basic_name)
+            if already:
+                cdn_prefix = self.handler.get_cdn_prefix()
+                if cdn_prefix:
+                    already = cdn_prefix + already
+                return already
 
         new_name = self._combine_filename(static_urls)
         # If you run multiple tornados (on different ports) it's possible
@@ -99,13 +102,18 @@ class StaticURL(tornado.web.UIModule):
 
         n, ext = os.path.splitext(new_name)
         new_name = "%s.%s%s" % (n, youngest, ext)
+
         optimization_done = False
-        if os.path.isfile(new_name):
+        if not return_inline and os.path.isfile(new_name):
             # conversion and preparation has already been done!
             # No point doing it again, so just exit here
             pass
         else:
-            destination = file(new_name, 'w')
+            if return_inline:
+                destination = StringIO()
+            else:
+                destination = file(new_name, 'w')
+
             if options.get('dont_optimize'):
                 do_optimize_static_content = False
             else:
@@ -121,8 +129,7 @@ class StaticURL(tornado.web.UIModule):
                   .settings.get('YUI_LOCATION')
 
             for full_path in full_paths:
-                f = open(full_path)
-                code = f.read()
+                code = open(full_path).read()
                 if full_path.endswith('.js'):
                     if len(full_paths) > 1:
                         destination.write('/* %s */\n' % os.path.basename(full_path))
@@ -169,10 +176,15 @@ class StaticURL(tornado.web.UIModule):
                 else:
                     # this just copies the file
                     pass
+
                 destination.write(code)
                 destination.write("\n")
+            if not return_inline:
+                destination.close()
 
-            destination.close()
+        if return_inline:
+            return destination.getvalue()
+
         prefix = self.handler.settings.get('combined_static_url_prefix', '/combined/')
         new_name = os.path.join(prefix, os.path.basename(new_name))
         _name_conversion[basic_name] = new_name
@@ -186,7 +198,6 @@ class StaticURL(tornado.web.UIModule):
             if cdn_prefix:
                 new_name = cdn_prefix + new_name
         return new_name
-
 
     def _combine_filename(self, names, max_length=60):
         # expect the parameter 'names' be something like this:
@@ -274,6 +285,25 @@ class Static(StaticURL):
             raise NotImplementedError
         url = super(Static, self).render(*static_urls)
         return template % dict(url=url)
+
+
+class StaticInline(StaticURL):
+    """given a list of static resources, return the whole HTML tag"""
+    def render(self, *static_urls, **options):
+        extension = static_urls[0].split('.')[-1]
+        if extension == 'css':
+            template = '<style type="text/css">%s</style>'
+        elif extension == 'js':
+            template = '<script type="text/javascript" '
+            if options.get('defer'):
+                template += 'defer '
+            elif options.get('async'):
+                template += 'async '
+            template += '>%s</script>'
+        else:
+            raise NotImplementedError
+        code = super(StaticInline, self).render(*static_urls, return_inline=True)
+        return template % code
 
 
 def run_closure_compiler(code, jar_location, verbose=False): # pragma: no cover
