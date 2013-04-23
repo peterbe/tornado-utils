@@ -71,25 +71,25 @@ class StaticURL(tornado.web.UIModule):
 
     def render(self, *static_urls, **options):
         return_inline = options.get('return_inline', False)
-        if not return_inline:
-            # the following 4 lines will have to be run for every request. Since
-            # it's just a basic lookup on a dict it's going to be uber fast.
-            basic_name = ''.join(static_urls)
-            already = _name_conversion.get(basic_name)
-            if already:
-                cdn_prefix = self.handler.get_cdn_prefix()
-                if cdn_prefix:
-                    already = cdn_prefix + already
-                return already
+        # the following 4 lines will have to be run for every request. Since
+        # it's just a basic lookup on a dict it's going to be uber fast.
+        basic_name = ''.join(static_urls)
+        already = _name_conversion.get(basic_name)
+        if already and not return_inline:
+            cdn_prefix = self.handler.get_cdn_prefix()
+            if cdn_prefix:
+                already = cdn_prefix + already
+            return already
 
         new_name = self._combine_filename(static_urls)
+
         # If you run multiple tornados (on different ports) it's possible
         # that another process has already dealt with this static URL.
         # Therefore we now first of all need to figure out what the final name
         # is going to be
         youngest = 0
         full_paths = []
-        old_paths = {} # maintain a map of what the filenames where before
+        old_paths = {}  # maintain a map of what the filenames where before
         for path in static_urls:
             full_path = os.path.join(
               self.handler.settings['static_path'], path)
@@ -104,15 +104,13 @@ class StaticURL(tornado.web.UIModule):
         new_name = "%s.%s%s" % (n, youngest, ext)
 
         optimization_done = False
-        if not return_inline and os.path.isfile(new_name):
+        if os.path.isfile(new_name):
             # conversion and preparation has already been done!
             # No point doing it again, so just exit here
             pass
+
         else:
-            if return_inline:
-                destination = StringIO()
-            else:
-                destination = file(new_name, 'w')
+            destination = file(new_name, 'w')
 
             if options.get('dont_optimize'):
                 do_optimize_static_content = False
@@ -170,20 +168,19 @@ class StaticURL(tornado.web.UIModule):
                     # do run this after the run_yui_compressor() has been used so that
                     # code that is commented out doesn't affect
                     code = self._replace_css_images_with_static_urls(
-                      code,
-                      os.path.dirname(old_paths[full_path])
-                      )
+                        code,
+                        os.path.dirname(old_paths[full_path])
+                    )
                 else:
                     # this just copies the file
                     pass
 
                 destination.write(code)
                 destination.write("\n")
-            if not return_inline:
-                destination.close()
+            destination.close()
 
         if return_inline:
-            return destination.getvalue()
+            return open(new_name).read()
 
         prefix = self.handler.settings.get('combined_static_url_prefix', '/combined/')
         new_name = os.path.join(prefix, os.path.basename(new_name))
